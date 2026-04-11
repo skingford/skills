@@ -22,13 +22,16 @@ npx skills add kingford/skills --skill '*' -g -y
 
 | Skill | Description | Scope |
 |-------|-------------|-------|
-| [go-pro](./go-pro) | Go best practices — project structure, error handling, concurrency, testing | Global / Project |
-| [api-design](./api-design) | RESTful & gRPC API design — naming, versioning, errors, pagination | Global / Project |
-| [prompt-engineer](./prompt-engineer) | Prompt engineering — system prompts, few-shot, CoT, evaluation | Global |
-| [mcp-ops](./mcp-ops) | MCP server development — tool design, resources, error handling | Global |
-| [git-workflow](./git-workflow) | Git conventions — branch naming, commits, PRs, merge strategies | Global |
-| [git-clean-main](./git-clean-main) | Keep AI files on dev, exclude from main/master | Global |
-| [project-bootstrap](./project-bootstrap) | Portable skills — auto-restore on new machine via hook + lock file | Global |
+| **Coding** | | |
+| [go-pro](./skills/go-pro) | Go best practices — project structure, error handling, concurrency, testing | Global / Project |
+| [api-design](./skills/api-design) | RESTful & gRPC API design — naming, versioning, errors, pagination | Global / Project |
+| **AI** | | |
+| [prompt-engineer](./skills/prompt-engineer) | Prompt engineering — system prompts, few-shot, CoT, evaluation | Global |
+| [mcp-ops](./skills/mcp-ops) | MCP server development — tool design, resources, error handling | Global |
+| **Git & Workflow** | | |
+| [git-workflow](./skills/git-workflow) | Git conventions — branch naming, commits, PRs, merge strategies | Global |
+| [git-clean-main](./skills/git-clean-main) | Keep AI files on dev, exclude from main/master | Global |
+| [project-bootstrap](./skills/project-bootstrap) | Portable skills — auto-restore on new machine via hook + lock file | Global |
 
 ## Portable Skills (New Machine Support)
 
@@ -94,12 +97,12 @@ claude   # Hook fires → skills auto-installed
 
 ## Creating a New Skill
 
-1. Copy the [template](./template) folder
+1. Copy the [template](./skills/template) folder
 2. Rename the folder to your skill name (kebab-case)
 3. Edit `SKILL.md` — update frontmatter and content
 4. Submit a PR
 
-See [template/SKILL.md](./template/SKILL.md) for the full structure.
+See [skills/template/SKILL.md](./skills/template/SKILL.md) for the full structure.
 
 ## License
 
