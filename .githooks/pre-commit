@@ -1,0 +1,39 @@
+#!/bin/bash
+# [git-clean-main] Auto-unstage AI files when committing on main/master
+
+AI_FILES=(
+  # AI Agent Platforms
+  ".claude" ".codex" ".augment" ".devin" ".bolt" ".v0" ".replit"
+  # AI-Enhanced IDEs
+  ".cursor" ".windsurf" ".trae" ".kiro" ".junie" ".aide"
+  # AI Coding Assistants
+  ".cline" ".roo" ".continue" ".cody" ".aider" ".copilot" ".tabnine" ".codeium" ".gemini" ".amazonq"
+  # Config & Rules Files
+  "openspec" "skills-lock.json" "AGENTS.md" ".cursorrules" ".cursorignore" ".windsurfrules" ".clinerules" ".roomodes" ".aider.conf.yml" ".aiderignore"
+  # Other Tools
+  ".obsidian"
+  # Agent install dirs
+  ".agents"
+)
+
+is_main_branch() {
+  local branch
+  branch=$(git symbolic-ref --short HEAD 2>/dev/null) || return 1
+  [[ "$branch" == "main" || "$branch" == "master" ]]
+}
+
+is_main_branch || exit 0
+
+removed=()
+for item in "${AI_FILES[@]}"; do
+  if git diff --cached --name-only | grep -q "^${item}"; then
+    git reset HEAD -- "$item" 2>/dev/null || true
+    removed+=("$item")
+  fi
+done
+
+if [ ${#removed[@]} -gt 0 ]; then
+  echo "⚠️  [git-clean-main] Auto-unstaged AI files from commit on $(git symbolic-ref --short HEAD):"
+  printf '   - %s\n' "${removed[@]}"
+  echo "   These files belong on dev, not main."
+fi
