@@ -18,6 +18,14 @@ npx skills add skingford/skills --skill api-design -y
 
 # 全局安装所有技能
 npx skills add skingford/skills --skill '*' -g -y
+
+# 指定安装到某个 Agent
+npx skills add skingford/skills --skill go-pro -g -y --agent claude-code
+npx skills add skingford/skills --skill go-pro -g -y --agent codex
+npx skills add skingford/skills --skill go-pro -g -y --agent cursor
+
+# 安装所有技能到所有 Agent
+npx skills add skingford/skills --all -g
 ```
 
 ## 可用技能
@@ -43,17 +51,54 @@ npx skills add skingford/skills --skill '*' -g -y
 ---
 name: my-skill
 description: "..."
-agents: [claude, codex, cursor]
+agents: [claude-code, codex, cursor]
 ---
 ```
 
-| Agent | 标识符 | 安装目录 | 格式 |
-|-------|--------|----------|------|
-| Claude Code | `claude` | `.claude/skills/` | SKILL.md |
-| Codex CLI | `codex` | `.codex/skills/` | SKILL.md |
-| Cursor | `cursor` | `.cursor/rules/` | .mdc |
+**常用 Agent：**
 
-大多数技能与 Agent 无关，可在所有三者中使用。依赖特定 Agent 功能（如 Claude hooks）的技能仅列出兼容的 Agent。
+| Agent | `--agent` 标识符 | 安装目录 |
+|-------|-----------------|----------|
+| Claude Code | `claude-code` | `.claude/skills/` |
+| OpenAI Codex CLI | `codex` | `.agents/skills/` |
+| Cursor | `cursor` | `.cursor/rules/` |
+| Windsurf | `windsurf` | `.windsurf/rules/` |
+| Augment | `augment` | `.augment/skills/` |
+| Cline | `cline` | `.cline/rules/` |
+| Roo | `roo` | `.roo/rules/` |
+| Trae | `trae` | `.trae/rules/` |
+| Kiro | `kiro-cli` | `.kiro/skills/` |
+| Gemini CLI | `gemini-cli` | `.gemini/skills/` |
+| GitHub Copilot | `github-copilot` | `.github/copilot/skills/` |
+| Junie | `junie` | `.junie/skills/` |
+
+<details>
+<summary>所有支持的 Agent</summary>
+
+`amp` `antigravity` `augment` `bob` `claude-code` `openclaw` `cline` `codebuddy` `codex` `command-code` `continue` `cortex` `crush` `cursor` `deepagents` `droid` `firebender` `gemini-cli` `github-copilot` `goose` `junie` `iflow-cli` `kilo` `kimi-cli` `kiro-cli` `kode` `mcpjam` `mistral-vibe` `mux` `opencode` `openhands` `pi` `qoder` `qwen-code` `replit` `roo` `trae` `trae-cn` `warp` `windsurf` `zencoder` `neovate` `pochi` `adal` `universal`
+
+</details>
+
+**指定 Agent 安装：**
+
+```bash
+# 仅安装到 Claude Code
+npx skills add skingford/skills --skill go-pro -g -y --agent claude-code
+
+# 仅安装到 Codex CLI
+npx skills add skingford/skills --skill go-pro -g -y --agent codex
+
+# 仅安装到 Cursor
+npx skills add skingford/skills --skill go-pro -g -y --agent cursor
+
+# 安装到多个 Agent
+npx skills add skingford/skills --skill go-pro -g -y --agent claude-code codex
+
+# 安装到所有 Agent（默认行为）
+npx skills add skingford/skills --skill go-pro -g -y --agent '*'
+```
+
+大多数技能与 Agent 无关，可跨 Agent 使用。依赖特定 Agent 功能（如 Claude hooks）的技能仅列出兼容的 Agent。
 
 ## 便携技能（新机器支持）
 
@@ -122,7 +167,7 @@ claude   # Hook 触发 → 技能自动安装
 1. 复制 [template](./skills/template) 文件夹
 2. 将文件夹重命名为你的技能名称（kebab-case）
 3. 编辑 `SKILL.md` — 更新 frontmatter（`name`、`description`、`agents`）和内容
-4. 将 `agents` 设置为支持的 Agent 列表（如 `[claude, codex, cursor]`）
+4. 将 `agents` 设置为支持的 Agent 列表（如 `[claude-code, codex, cursor]`）
 5. 提交 PR
 
 完整结构请参见 [skills/template/SKILL.md](./skills/template/SKILL.md)。
