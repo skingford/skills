@@ -1,0 +1,49 @@
+#!/bin/bash
+# [git-clean-main] Block push to main/master if AI files are included
+
+AI_FILES=(
+  # AI Agent Platforms
+  ".claude" ".codex" ".augment" ".devin" ".bolt" ".v0" ".replit"
+  # AI-Enhanced IDEs
+  ".cursor" ".windsurf" ".trae" ".kiro" ".junie" ".aide"
+  # AI Coding Assistants
+  ".cline" ".roo" ".continue" ".cody" ".aider" ".copilot" ".tabnine" ".codeium" ".gemini" ".amazonq"
+  # Config & Rules Files
+  "openspec" "skills-lock.json" "AGENTS.md" ".cursorrules" ".cursorignore" ".windsurfrules" ".clinerules" ".roomodes" ".aider.conf.yml" ".aiderignore"
+  # Other Tools
+  ".obsidian"
+  # Agent install dirs
+  ".agents"
+)
+
+while read local_ref local_sha remote_ref remote_sha; do
+  # Only check pushes targeting main or master
+  case "$remote_ref" in
+    refs/heads/main|refs/heads/master) ;;
+    *) continue ;;
+  esac
+
+  # Check if any AI files exist in the commits being pushed
+  if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
+    range="$local_sha"
+  else
+    range="$remote_sha..$local_sha"
+  fi
+
+  found=()
+  for item in "${AI_FILES[@]}"; do
+    if git diff --name-only "$range" 2>/dev/null | grep -q "^${item}"; then
+      found+=("$item")
+    fi
+  done
+
+  if [ ${#found[@]} -gt 0 ]; then
+    echo "🚫 [git-clean-main] Push to ${remote_ref#refs/heads/} blocked — AI files detected:"
+    printf '   - %s\n' "${found[@]}"
+    echo ""
+    echo "   Run the merge script or remove these files first."
+    exit 1
+  fi
+done
+
+exit 0
