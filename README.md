@@ -1,3 +1,5 @@
+[English](./README.md) | [中文](./README_zh.md)
+
 # Skills
 
 A curated collection of Claude Code skills for practical development workflows. Each skill is individually installable via [`npx skills`](https://www.npmjs.com/package/skills).

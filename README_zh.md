@@ -1,0 +1,111 @@
+[English](./README.md) | [中文](./README_zh.md)
+
+# Skills
+
+精选的 Claude Code 技能集合，用于实用的开发工作流。每个技能均可通过 [`npx skills`](https://www.npmjs.com/package/skills) 单独安装。
+
+## 快速开始
+
+```bash
+# 浏览所有可用技能
+npx skills add skingford/skills --list
+
+# 全局安装单个技能
+npx skills add skingford/skills --skill go-pro -g -y
+
+# 安装单个技能到当前项目
+npx skills add skingford/skills --skill api-design -y
+
+# 全局安装所有技能
+npx skills add skingford/skills --skill '*' -g -y
+```
+
+## 可用技能
+
+| 技能 | 说明 | 作用域 |
+|------|------|--------|
+| **编程** | | |
+| [go-pro](./skills/go-pro) | Go 最佳实践 — 项目结构、错误处理、并发、测试 | 全局 / 项目 |
+| [api-design](./skills/api-design) | RESTful & gRPC API 设计 — 命名、版本控制、错误处理、分页 | 全局 / 项目 |
+| **AI** | | |
+| [prompt-engineer](./skills/prompt-engineer) | 提示工程 — 系统提示词、少样本、思维链、评估 | 全局 |
+| [mcp-ops](./skills/mcp-ops) | MCP 服务器开发 — 工具设计、资源管理、错误处理 | 全局 |
+| **Git & 工作流** | | |
+| [git-workflow](./skills/git-workflow) | Git 规范 — 分支命名、提交、PR、合并策略 | 全局 |
+| [git-clean-main](./skills/git-clean-main) | 将 AI 文件保留在 dev 分支，排除出 main/master | 全局 |
+| [project-bootstrap](./skills/project-bootstrap) | 便携技能 — 通过 hook + lock 文件在新机器上自动恢复 | 全局 |
+
+## 便携技能（新机器支持）
+
+技能可以跟随你跨机器使用。有两种机制：
+
+### 全局技能 — 一条命令安装
+
+```bash
+# 在新机器上安装你的全部工具集：
+npx skills add skingford/skills --skill '*' -g -y
+
+# 或通过脚本安装：
+curl -fsSL https://raw.githubusercontent.com/skingford/skills/main/scripts/install.sh | bash
+```
+
+### 项目技能 — 从 Lock 文件自动恢复
+
+项目级技能通过 `skills-lock.json` 跟踪。添加自动安装 hook，技能会在 clone 后自动恢复：
+
+**1. 安装技能到项目（创建 `skills-lock.json`）：**
+
+```bash
+npx skills add skingford/skills --skill go-pro -y
+npx skills add skingford/skills --skill api-design -y
+```
+
+**2. 在 `.claude/settings.json` 中添加自动恢复 hook：**
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "test -f skills-lock.json && npx skills experimental_install",
+            "timeout": 60,
+            "statusMessage": "Syncing project skills..."
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**3. 提交这两个文件：**
+
+```bash
+git add skills-lock.json .claude/settings.json
+git commit -m "chore: add project skills with auto-restore"
+```
+
+现在在任何新机器上：
+
+```bash
+git clone <your-project>
+cd <your-project>
+claude   # Hook 触发 → 技能自动安装
+```
+
+## 创建新技能
+
+1. 复制 [template](./skills/template) 文件夹
+2. 将文件夹重命名为你的技能名称（kebab-case）
+3. 编辑 `SKILL.md` — 更新 frontmatter 和内容
+4. 提交 PR
+
+完整结构请参见 [skills/template/SKILL.md](./skills/template/SKILL.md)。
+
+## 许可证
+
+[MIT](./LICENSE)
