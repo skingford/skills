@@ -4,3 +4,55 @@ tmp/
 *.swp
 *.swo
 *~
+
+# AI tooling (kept on dev, excluded from main)
+
+# AI Agent Platforms
+.claude/
+.codex/
+.augment/
+.devin/
+.bolt/
+.v0/
+.replit/
+
+# AI-Enhanced IDEs
+.cursor/
+.windsurf/
+.trae/
+.kiro/
+.junie/
+.aide/
+
+# AI Coding Assistants
+.cline/
+.roo/
+.continue/
+.cody/
+.aider/
+.copilot/
+.tabnine/
+.codeium/
+.gemini/
+.amazonq/
+
+# Config & Rules Files
+openspec/
+skills-lock.json
+AGENTS.md
+.cursorrules
+.cursorignore
+.windsurfrules
+.clinerules
+.roomodes
+.aider.conf.yml
+.aiderignore
+
+# Agent install dirs
+.agents/
+
+# Other Tools
+.obsidian/
+
+# Git hooks (shared via repo)
+.githooks/
