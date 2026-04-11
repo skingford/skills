@@ -103,8 +103,8 @@ When you install project-level skills, `skills-lock.json` is auto-generated:
 
 ```bash
 # Install skills to project (NOT global, no -g flag)
-npx skills add kingford/skills --skill go-pro -y
-npx skills add kingford/skills --skill api-design -y
+npx skills add skingford/skills --skill go-pro -y
+npx skills add skingford/skills --skill api-design -y
 npx skills add antfu/skills --skill vite -y
 ```
 
@@ -115,12 +115,12 @@ This creates `skills-lock.json`:
   "version": 1,
   "skills": {
     "go-pro": {
-      "source": "kingford/skills",
+      "source": "skingford/skills",
       "sourceType": "github",
       "computedHash": "abc123..."
     },
     "api-design": {
-      "source": "kingford/skills",
+      "source": "skingford/skills",
       "sourceType": "github",
       "computedHash": "def456..."
     },
@@ -141,8 +141,8 @@ When setting up a project for portable skills:
 
 ```bash
 # 1. Install desired skills at project level
-npx skills add kingford/skills --skill go-pro -y
-npx skills add kingford/skills --skill api-design -y
+npx skills add skingford/skills --skill go-pro -y
+npx skills add skingford/skills --skill api-design -y
 
 # 2. Verify skills-lock.json was created
 cat skills-lock.json
@@ -177,13 +177,13 @@ For global skills (your personal toolkit), run once on the new machine:
 
 ```bash
 # Install all global skills from the repo
-npx skills add kingford/skills --skill '*' -g -y
+npx skills add skingford/skills --skill '*' -g -y
 
 # Or use the install script
-curl -fsSL https://raw.githubusercontent.com/kingford/skills/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/skingford/skills/main/scripts/install.sh | bash
 ```
 
 ## Recommended Scope
 
 - **Scope**: Global (useful for any project you set up)
-- **Install**: `npx skills add kingford/skills --skill project-bootstrap -g -y`
+- **Install**: `npx skills add skingford/skills --skill project-bootstrap -g -y`

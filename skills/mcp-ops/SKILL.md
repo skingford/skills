@@ -237,4 +237,4 @@ mcp dev server.py
 ## Recommended Scope
 
 - **Scope**: Global (useful whenever building MCP servers)
-- **Install**: `npx skills add kingford/skills --skill mcp-ops -g -y`
+- **Install**: `npx skills add skingford/skills --skill mcp-ops -g -y`

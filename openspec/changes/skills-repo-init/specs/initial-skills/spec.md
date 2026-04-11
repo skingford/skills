@@ -39,5 +39,5 @@ The repo SHALL include a `git-workflow/SKILL.md` skill that provides git workflo
 Every skill SKILL.md SHALL include valid YAML frontmatter with `name` (matching folder name, kebab-case) and `description` (clear trigger description for when Claude should use this skill).
 
 #### Scenario: CLI can parse skill metadata
-- **WHEN** `npx skills add kingford/skills --list` is run
+- **WHEN** `npx skills add skingford/skills --list` is run
 - **THEN** each skill shows its name and description correctly

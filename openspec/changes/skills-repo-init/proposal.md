@@ -1,6 +1,6 @@
 ## Why
 
-We need a centralized, public GitHub repo (`kingford/skills`) to host curated Claude Code skills that can be individually installed via `npx skills add kingford/skills --skill <name>`. Currently skills are scattered across `~/.agents/skills/` as symlinks from various sources, with no version control, no reproducibility (no lock file), and no way to share with others.
+We need a centralized, public GitHub repo (`skingford/skills`) to host curated Claude Code skills that can be individually installed via `npx skills add skingford/skills --skill <name>`. Currently skills are scattered across `~/.agents/skills/` as symlinks from various sources, with no version control, no reproducibility (no lock file), and no way to share with others.
 
 ## What Changes
 

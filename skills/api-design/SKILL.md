@@ -155,5 +155,5 @@ GET /api/v1/users?limit=20&cursor=eyJpZCI6MTAwfQ
 ## Recommended Scope
 
 - **Scope**: Both
-- **Global**: `npx skills add kingford/skills --skill api-design -g -y`
-- **Project**: `npx skills add kingford/skills --skill api-design -y`
+- **Global**: `npx skills add skingford/skills --skill api-design -g -y`
+- **Project**: `npx skills add skingford/skills --skill api-design -y`

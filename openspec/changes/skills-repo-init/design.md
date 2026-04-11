@@ -1,6 +1,6 @@
 ## Context
 
-The `kingford/skills` repo is currently empty (just a README). The goal is to turn it into a public skills monorepo compatible with the `npx skills` CLI ecosystem (agentskills.io). The CLI discovers skills by scanning for `SKILL.md` files in a Git repo, so the design is constrained by that convention.
+The `skingford/skills` repo is currently empty (just a README). The goal is to turn it into a public skills monorepo compatible with the `npx skills` CLI ecosystem (agentskills.io). The CLI discovers skills by scanning for `SKILL.md` files in a Git repo, so the design is constrained by that convention.
 
 Reference repos: `anthropics/skills` (17 skills), `antfu/skills` (17 skills), `vercel-labs/agent-skills` (7 skills).
 

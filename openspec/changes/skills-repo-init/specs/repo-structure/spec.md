@@ -4,11 +4,11 @@
 The repo SHALL use a flat folder structure where each skill is a top-level directory containing at minimum a `SKILL.md` file.
 
 #### Scenario: Skill discovery by CLI
-- **WHEN** a user runs `npx skills add kingford/skills --list`
+- **WHEN** a user runs `npx skills add skingford/skills --list`
 - **THEN** all skills are listed with their names and descriptions extracted from `SKILL.md` frontmatter
 
 #### Scenario: Single skill install
-- **WHEN** a user runs `npx skills add kingford/skills --skill go-pro`
+- **WHEN** a user runs `npx skills add skingford/skills --skill go-pro`
 - **THEN** only the `go-pro` skill is installed to the target agent directory
 
 ### Requirement: README as skill catalog
@@ -29,6 +29,6 @@ The repo SHALL include a `LICENSE` (MIT) and `.gitignore` file at the root.
 Project-level installs SHALL be automatically tracked in `skills-lock.json` by the `npx skills` CLI without any custom tooling.
 
 #### Scenario: Reproducible project-level install
-- **WHEN** a user runs `npx skills add kingford/skills --skill go-pro` (without `-g`)
-- **THEN** a `skills-lock.json` entry is created with `source: "kingford/skills"` and a `computedHash`
+- **WHEN** a user runs `npx skills add skingford/skills --skill go-pro` (without `-g`)
+- **THEN** a `skills-lock.json` entry is created with `source: "skingford/skills"` and a `computedHash`
 - **AND** another user can run `npx skills experimental_install` to restore the same skill
