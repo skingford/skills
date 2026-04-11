@@ -52,4 +52,4 @@ Do NOT use this skill when:
 
 <!-- One of: Global (install with -g), Project-level, or Both -->
 - **Scope**: Global
-- **Install**: `npx skills add kingford/skills --skill my-skill-name -g -y`
+- **Install**: `npx skills add skingford/skills --skill my-skill-name -g -y`

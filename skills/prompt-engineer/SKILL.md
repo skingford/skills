@@ -194,4 +194,4 @@ When testing prompts:
 ## Recommended Scope
 
 - **Scope**: Global (useful across all AI-related projects)
-- **Install**: `npx skills add kingford/skills --skill prompt-engineer -g -y`
+- **Install**: `npx skills add skingford/skills --skill prompt-engineer -g -y`

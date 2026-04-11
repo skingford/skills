@@ -184,4 +184,4 @@ Brief description of what this PR does and why.
 ## Recommended Scope
 
 - **Scope**: Global (consistent across all projects)
-- **Install**: `npx skills add kingford/skills --skill git-workflow -g -y`
+- **Install**: `npx skills add skingford/skills --skill git-workflow -g -y`

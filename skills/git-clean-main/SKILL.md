@@ -197,4 +197,4 @@ gh pr create --base main --title "chore: merge dev to main" --body "Clean merge 
 ## Recommended Scope
 
 - **Scope**: Global (applies to any AI-assisted project)
-- **Install**: `npx skills add kingford/skills --skill git-clean-main -g -y`
+- **Install**: `npx skills add skingford/skills --skill git-clean-main -g -y`

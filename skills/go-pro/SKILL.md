@@ -166,5 +166,5 @@ func TestFindUser(t *testing.T) {
 ## Recommended Scope
 
 - **Scope**: Both (Global for Go-heavy developers, Project-level for mixed-stack teams)
-- **Global**: `npx skills add kingford/skills --skill go-pro -g -y`
-- **Project**: `npx skills add kingford/skills --skill go-pro -y`
+- **Global**: `npx skills add skingford/skills --skill go-pro -g -y`
+- **Project**: `npx skills add skingford/skills --skill go-pro -y`

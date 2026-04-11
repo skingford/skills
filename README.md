@@ -6,16 +6,16 @@ A curated collection of Claude Code skills for practical development workflows. 
 
 ```bash
 # Browse all available skills
-npx skills add kingford/skills --list
+npx skills add skingford/skills --list
 
 # Install a single skill globally
-npx skills add kingford/skills --skill go-pro -g -y
+npx skills add skingford/skills --skill go-pro -g -y
 
 # Install a single skill to current project
-npx skills add kingford/skills --skill api-design -y
+npx skills add skingford/skills --skill api-design -y
 
 # Install all skills globally
-npx skills add kingford/skills --skill '*' -g -y
+npx skills add skingford/skills --skill '*' -g -y
 ```
 
 ## Available Skills
@@ -41,10 +41,10 @@ Skills follow you across machines. Two mechanisms:
 
 ```bash
 # On a new machine, install your full toolkit:
-npx skills add kingford/skills --skill '*' -g -y
+npx skills add skingford/skills --skill '*' -g -y
 
 # Or via script:
-curl -fsSL https://raw.githubusercontent.com/kingford/skills/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/skingford/skills/main/scripts/install.sh | bash
 ```
 
 ### Project Skills — Auto-Restore from Lock File
@@ -54,8 +54,8 @@ Project-level skills are tracked in `skills-lock.json`. Add an auto-install hook
 **1. Install skills to project (creates `skills-lock.json`):**
 
 ```bash
-npx skills add kingford/skills --skill go-pro -y
-npx skills add kingford/skills --skill api-design -y
+npx skills add skingford/skills --skill go-pro -y
+npx skills add skingford/skills --skill api-design -y
 ```
 
 **2. Add auto-restore hook to `.claude/settings.json`:**
