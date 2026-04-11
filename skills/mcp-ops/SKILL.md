@@ -1,6 +1,7 @@
 ---
 name: mcp-ops
 description: "MCP (Model Context Protocol) server development best practices. Use when building, debugging, or reviewing MCP servers and tools. Covers tool design, resource management, error handling, transport configuration, and testing. Triggers on tasks involving MCP server code, tool definitions, or MCP integration."
+agents: [claude, codex, cursor]
 ---
 
 # MCP Ops

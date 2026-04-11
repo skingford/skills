@@ -1,6 +1,11 @@
 #!/bin/bash
 # Install all skills from this repo globally
 # Usage: curl -fsSL https://raw.githubusercontent.com/skingford/skills/main/scripts/install.sh | bash
+#
+# Agent-specific install (when CLI supports --agent):
+#   npx skills add skingford/skills --skill '*' -g -y --agent claude
+#   npx skills add skingford/skills --skill '*' -g -y --agent codex
+#   npx skills add skingford/skills --skill '*' -g -y --agent cursor
 
 set -e
 

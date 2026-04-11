@@ -1,6 +1,7 @@
 ---
 name: git-workflow
 description: "Git workflow conventions for branch naming, commit messages, PR workflow, and merge strategies. Use when creating branches, writing commits, opening PRs, or establishing git conventions for a project. Triggers on git operations, commit message writing, or repository workflow setup."
+agents: [claude, codex, cursor]
 ---
 
 # Git Workflow
