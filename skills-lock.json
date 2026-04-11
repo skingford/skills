@@ -1,6 +1,11 @@
 {
   "version": 1,
   "skills": {
+    "git-clean-main": {
+      "source": "skingford/skills",
+      "sourceType": "github",
+      "computedHash": "903ac2ed54f2c99f09599a23fe246425a37f65f0f17f805a294f315b57bf5046"
+    },
     "git-commit": {
       "source": "github/awesome-copilot",
       "sourceType": "github",

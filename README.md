@@ -18,6 +18,14 @@ npx skills add skingford/skills --skill api-design -y
 
 # Install all skills globally
 npx skills add skingford/skills --skill '*' -g -y
+
+# Install to a specific agent only
+npx skills add skingford/skills --skill go-pro -g -y --agent claude-code
+npx skills add skingford/skills --skill go-pro -g -y --agent codex
+npx skills add skingford/skills --skill go-pro -g -y --agent cursor
+
+# Install all skills to all agents
+npx skills add skingford/skills --all -g
 ```
 
 ## Available Skills
@@ -43,17 +51,54 @@ Skills declare which AI coding agents they support via the `agents` field in SKI
 ---
 name: my-skill
 description: "..."
-agents: [claude, codex, cursor]
+agents: [claude-code, codex, cursor]
 ---
 ```
 
-| Agent | Identifier | Install Directory | Format |
-|-------|------------|-------------------|--------|
-| Claude Code | `claude` | `.claude/skills/` | SKILL.md |
-| Codex CLI | `codex` | `.codex/skills/` | SKILL.md |
-| Cursor | `cursor` | `.cursor/rules/` | .mdc |
+**Common agents:**
 
-Most skills are agent-agnostic and work with all three. Skills that depend on agent-specific features (e.g., Claude hooks) list only compatible agents.
+| Agent | `--agent` Identifier | Install Directory |
+|-------|---------------------|-------------------|
+| Claude Code | `claude-code` | `.claude/skills/` |
+| OpenAI Codex CLI | `codex` | `.agents/skills/` |
+| Cursor | `cursor` | `.cursor/rules/` |
+| Windsurf | `windsurf` | `.windsurf/rules/` |
+| Augment | `augment` | `.augment/skills/` |
+| Cline | `cline` | `.cline/rules/` |
+| Roo | `roo` | `.roo/rules/` |
+| Trae | `trae` | `.trae/rules/` |
+| Kiro | `kiro-cli` | `.kiro/skills/` |
+| Gemini CLI | `gemini-cli` | `.gemini/skills/` |
+| GitHub Copilot | `github-copilot` | `.github/copilot/skills/` |
+| Junie | `junie` | `.junie/skills/` |
+
+<details>
+<summary>All supported agents</summary>
+
+`amp` `antigravity` `augment` `bob` `claude-code` `openclaw` `cline` `codebuddy` `codex` `command-code` `continue` `cortex` `crush` `cursor` `deepagents` `droid` `firebender` `gemini-cli` `github-copilot` `goose` `junie` `iflow-cli` `kilo` `kimi-cli` `kiro-cli` `kode` `mcpjam` `mistral-vibe` `mux` `opencode` `openhands` `pi` `qoder` `qwen-code` `replit` `roo` `trae` `trae-cn` `warp` `windsurf` `zencoder` `neovate` `pochi` `adal` `universal`
+
+</details>
+
+**Agent-specific install:**
+
+```bash
+# Install only for Claude Code
+npx skills add skingford/skills --skill go-pro -g -y --agent claude-code
+
+# Install only for Codex CLI
+npx skills add skingford/skills --skill go-pro -g -y --agent codex
+
+# Install only for Cursor
+npx skills add skingford/skills --skill go-pro -g -y --agent cursor
+
+# Install for multiple agents
+npx skills add skingford/skills --skill go-pro -g -y --agent claude-code codex
+
+# Install for all agents (default behavior)
+npx skills add skingford/skills --skill go-pro -g -y --agent '*'
+```
+
+Most skills are agent-agnostic and work across agents. Skills that depend on agent-specific features (e.g., Claude hooks) list only compatible agents.
 
 ## Portable Skills (New Machine Support)
 
@@ -122,7 +167,7 @@ claude   # Hook fires → skills auto-installed
 1. Copy the [template](./skills/template) folder
 2. Rename the folder to your skill name (kebab-case)
 3. Edit `SKILL.md` — update frontmatter (`name`, `description`, `agents`) and content
-4. Set `agents` to the list of supported agents (e.g., `[claude, codex, cursor]`)
+4. Set `agents` to the list of supported agents (e.g., `[claude-code, codex, cursor]`)
 5. Submit a PR
 
 See [skills/template/SKILL.md](./skills/template/SKILL.md) for the full structure.
