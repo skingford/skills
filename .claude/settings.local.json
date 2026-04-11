@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rm -rf .claude/commands/opsx .claude/skills/openspec-* .codex/skills/openspec-* openspec)",
+      "Bash(git checkout:*)"
+    ]
+  }
+}
