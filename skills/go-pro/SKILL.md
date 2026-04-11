@@ -1,6 +1,7 @@
 ---
 name: go-pro
 description: "Go language best practices and idiomatic patterns. Use when writing, reviewing, or refactoring Go code. Covers project structure, error handling, concurrency, testing, and performance. Triggers on tasks involving .go files, Go modules, or Go project setup."
+agents: [claude, codex, cursor]
 ---
 
 # Go Pro

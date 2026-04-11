@@ -22,18 +22,38 @@ npx skills add skingford/skills --skill '*' -g -y
 
 ## Available Skills
 
-| Skill | Description | Scope |
-|-------|-------------|-------|
-| **Coding** | | |
-| [go-pro](./skills/go-pro) | Go best practices — project structure, error handling, concurrency, testing | Global / Project |
-| [api-design](./skills/api-design) | RESTful & gRPC API design — naming, versioning, errors, pagination | Global / Project |
-| **AI** | | |
-| [prompt-engineer](./skills/prompt-engineer) | Prompt engineering — system prompts, few-shot, CoT, evaluation | Global |
-| [mcp-ops](./skills/mcp-ops) | MCP server development — tool design, resources, error handling | Global |
-| **Git & Workflow** | | |
-| [git-workflow](./skills/git-workflow) | Git conventions — branch naming, commits, PRs, merge strategies | Global |
-| [git-clean-main](./skills/git-clean-main) | Keep AI files on dev, exclude from main/master | Global |
-| [project-bootstrap](./skills/project-bootstrap) | Portable skills — auto-restore on new machine via hook + lock file | Global |
+| Skill | Description | Scope | Agents |
+|-------|-------------|-------|--------|
+| **Coding** | | | |
+| [go-pro](./skills/go-pro) | Go best practices — project structure, error handling, concurrency, testing | Global / Project | Claude, Codex, Cursor |
+| [api-design](./skills/api-design) | RESTful & gRPC API design — naming, versioning, errors, pagination | Global / Project | Claude, Codex, Cursor |
+| **AI** | | | |
+| [prompt-engineer](./skills/prompt-engineer) | Prompt engineering — system prompts, few-shot, CoT, evaluation | Global | Claude, Codex, Cursor |
+| [mcp-ops](./skills/mcp-ops) | MCP server development — tool design, resources, error handling | Global | Claude, Codex, Cursor |
+| **Git & Workflow** | | | |
+| [git-workflow](./skills/git-workflow) | Git conventions — branch naming, commits, PRs, merge strategies | Global | Claude, Codex, Cursor |
+| [git-clean-main](./skills/git-clean-main) | Keep AI files on dev, exclude from main/master | Global | Claude, Codex, Cursor |
+| [project-bootstrap](./skills/project-bootstrap) | Portable skills — auto-restore on new machine via hook + lock file | Global | Claude |
+
+## Multi-Agent Support
+
+Skills declare which AI coding agents they support via the `agents` field in SKILL.md frontmatter:
+
+```yaml
+---
+name: my-skill
+description: "..."
+agents: [claude, codex, cursor]
+---
+```
+
+| Agent | Identifier | Install Directory | Format |
+|-------|------------|-------------------|--------|
+| Claude Code | `claude` | `.claude/skills/` | SKILL.md |
+| Codex CLI | `codex` | `.codex/skills/` | SKILL.md |
+| Cursor | `cursor` | `.cursor/rules/` | .mdc |
+
+Most skills are agent-agnostic and work with all three. Skills that depend on agent-specific features (e.g., Claude hooks) list only compatible agents.
 
 ## Portable Skills (New Machine Support)
 
@@ -101,8 +121,9 @@ claude   # Hook fires → skills auto-installed
 
 1. Copy the [template](./skills/template) folder
 2. Rename the folder to your skill name (kebab-case)
-3. Edit `SKILL.md` — update frontmatter and content
-4. Submit a PR
+3. Edit `SKILL.md` — update frontmatter (`name`, `description`, `agents`) and content
+4. Set `agents` to the list of supported agents (e.g., `[claude, codex, cursor]`)
+5. Submit a PR
 
 See [skills/template/SKILL.md](./skills/template/SKILL.md) for the full structure.
 

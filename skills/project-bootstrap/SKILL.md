@@ -1,6 +1,7 @@
 ---
 name: project-bootstrap
 description: "Make project skills portable across machines. Use when setting up a new project with skills, onboarding a new machine, or ensuring skills-lock.json and auto-install hooks are configured. Triggers when user mentions project setup, new machine, portable skills, or restoring skills."
+agents: [claude]
 ---
 
 # Project Bootstrap

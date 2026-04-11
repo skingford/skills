@@ -1,6 +1,7 @@
 ---
 name: api-design
 description: "RESTful and gRPC API design guidelines. Use when designing, reviewing, or implementing API endpoints. Covers URL naming, versioning, error responses, pagination, authentication patterns, and request/response conventions. Triggers on tasks involving API routes, endpoint design, OpenAPI specs, or protobuf definitions."
+agents: [claude, codex, cursor]
 ---
 
 # API Design

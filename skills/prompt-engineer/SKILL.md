@@ -1,6 +1,7 @@
 ---
 name: prompt-engineer
 description: "Prompt engineering methodology for LLM applications. Use when crafting system prompts, designing few-shot examples, building chain-of-thought reasoning, or evaluating prompt quality. Triggers on tasks involving prompt writing, LLM integration, AI application development, or prompt optimization."
+agents: [claude, codex, cursor]
 ---
 
 # Prompt Engineer

@@ -22,18 +22,38 @@ npx skills add skingford/skills --skill '*' -g -y
 
 ## 可用技能
 
-| 技能 | 说明 | 作用域 |
-|------|------|--------|
-| **编程** | | |
-| [go-pro](./skills/go-pro) | Go 最佳实践 — 项目结构、错误处理、并发、测试 | 全局 / 项目 |
-| [api-design](./skills/api-design) | RESTful & gRPC API 设计 — 命名、版本控制、错误处理、分页 | 全局 / 项目 |
-| **AI** | | |
-| [prompt-engineer](./skills/prompt-engineer) | 提示工程 — 系统提示词、少样本、思维链、评估 | 全局 |
-| [mcp-ops](./skills/mcp-ops) | MCP 服务器开发 — 工具设计、资源管理、错误处理 | 全局 |
-| **Git & 工作流** | | |
-| [git-workflow](./skills/git-workflow) | Git 规范 — 分支命名、提交、PR、合并策略 | 全局 |
-| [git-clean-main](./skills/git-clean-main) | 将 AI 文件保留在 dev 分支，排除出 main/master | 全局 |
-| [project-bootstrap](./skills/project-bootstrap) | 便携技能 — 通过 hook + lock 文件在新机器上自动恢复 | 全局 |
+| 技能 | 说明 | 作用域 | 支持的 Agent |
+|------|------|--------|-------------|
+| **编程** | | | |
+| [go-pro](./skills/go-pro) | Go 最佳实践 — 项目结构、错误处理、并发、测试 | 全局 / 项目 | Claude, Codex, Cursor |
+| [api-design](./skills/api-design) | RESTful & gRPC API 设计 — 命名、版本控制、错误处理、分页 | 全局 / 项目 | Claude, Codex, Cursor |
+| **AI** | | | |
+| [prompt-engineer](./skills/prompt-engineer) | 提示工程 — 系统提示词、少样本、思维链、评估 | 全局 | Claude, Codex, Cursor |
+| [mcp-ops](./skills/mcp-ops) | MCP 服务器开发 — 工具设计、资源管理、错误处理 | 全局 | Claude, Codex, Cursor |
+| **Git & 工作流** | | | |
+| [git-workflow](./skills/git-workflow) | Git 规范 — 分支命名、提交、PR、合并策略 | 全局 | Claude, Codex, Cursor |
+| [git-clean-main](./skills/git-clean-main) | 将 AI 文件保留在 dev 分支，排除出 main/master | 全局 | Claude, Codex, Cursor |
+| [project-bootstrap](./skills/project-bootstrap) | 便携技能 — 通过 hook + lock 文件在新机器上自动恢复 | 全局 | Claude |
+
+## 多 Agent 支持
+
+技能通过 SKILL.md frontmatter 中的 `agents` 字段声明支持哪些 AI 编程 Agent：
+
+```yaml
+---
+name: my-skill
+description: "..."
+agents: [claude, codex, cursor]
+---
+```
+
+| Agent | 标识符 | 安装目录 | 格式 |
+|-------|--------|----------|------|
+| Claude Code | `claude` | `.claude/skills/` | SKILL.md |
+| Codex CLI | `codex` | `.codex/skills/` | SKILL.md |
+| Cursor | `cursor` | `.cursor/rules/` | .mdc |
+
+大多数技能与 Agent 无关，可在所有三者中使用。依赖特定 Agent 功能（如 Claude hooks）的技能仅列出兼容的 Agent。
 
 ## 便携技能（新机器支持）
 
@@ -101,8 +121,9 @@ claude   # Hook 触发 → 技能自动安装
 
 1. 复制 [template](./skills/template) 文件夹
 2. 将文件夹重命名为你的技能名称（kebab-case）
-3. 编辑 `SKILL.md` — 更新 frontmatter 和内容
-4. 提交 PR
+3. 编辑 `SKILL.md` — 更新 frontmatter（`name`、`description`、`agents`）和内容
+4. 将 `agents` 设置为支持的 Agent 列表（如 `[claude, codex, cursor]`）
+5. 提交 PR
 
 完整结构请参见 [skills/template/SKILL.md](./skills/template/SKILL.md)。
 

@@ -1,6 +1,7 @@
 ---
 name: my-skill-name
 description: "Replace with a clear description of what this skill does and when Claude should trigger it. Be specific about trigger conditions."
+agents: [claude, codex, cursor]
 ---
 
 # My Skill Name
@@ -47,6 +48,11 @@ Do NOT use this skill when:
 ```
 <!-- Example of what to avoid -->
 ```
+
+## Agent Compatibility
+
+- **Agents**: Claude Code, Codex CLI, Cursor
+- Remove any agent from the `agents` frontmatter list if this skill depends on agent-specific features (e.g., Claude hooks, Cursor-specific rules)
 
 ## Recommended Scope
 
