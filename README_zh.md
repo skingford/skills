@@ -7,6 +7,14 @@
 ## 快速开始
 
 ```bash
+# 交互式安装 — 选择 Agent 和技能
+curl -fsSL https://raw.githubusercontent.com/skingford/skills/main/scripts/install.sh | bash
+```
+
+<details>
+<summary>手动安装命令</summary>
+
+```bash
 # 浏览所有可用技能
 npx skills add skingford/skills --list
 
@@ -27,6 +35,8 @@ npx skills add skingford/skills --skill go-pro -g -y --agent cursor
 # 安装所有技能到所有 Agent
 npx skills add skingford/skills --all -g
 ```
+
+</details>
 
 ## 可用技能
 

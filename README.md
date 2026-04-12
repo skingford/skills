@@ -7,6 +7,14 @@ A curated collection of Claude Code skills for practical development workflows. 
 ## Quick Start
 
 ```bash
+# Interactive install — choose agents & skills
+curl -fsSL https://raw.githubusercontent.com/skingford/skills/main/scripts/install.sh | bash
+```
+
+<details>
+<summary>Manual install commands</summary>
+
+```bash
 # Browse all available skills
 npx skills add skingford/skills --list
 
@@ -27,6 +35,8 @@ npx skills add skingford/skills --skill go-pro -g -y --agent cursor
 # Install all skills to all agents
 npx skills add skingford/skills --all -g
 ```
+
+</details>
 
 ## Available Skills
 
