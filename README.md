@@ -45,6 +45,7 @@ npx skills add skingford/skills --all -g
 | **Coding** | | | |
 | [go-pro](./skills/go-pro) | Go best practices — project structure, error handling, concurrency, testing | Global / Project | Claude, Codex, Cursor |
 | [api-design](./skills/api-design) | RESTful & gRPC API design — naming, versioning, errors, pagination | Global / Project | Claude, Codex, Cursor |
+| [nextjs-pro](./skills/nextjs-pro) | Next.js architecture — bun, Turborepo, App Router, server components | Global / Project | Claude, Codex, Cursor |
 | **AI** | | | |
 | [prompt-engineer](./skills/prompt-engineer) | Prompt engineering — system prompts, few-shot, CoT, evaluation | Global | Claude, Codex, Cursor |
 | [mcp-ops](./skills/mcp-ops) | MCP server development — tool design, resources, error handling | Global | Claude, Codex, Cursor |
