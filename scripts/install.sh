@@ -21,18 +21,20 @@ RED='\033[31m'
 RESET='\033[0m'
 
 # ── TTY ───────────────────────────────────────────────────────────
+TTY_IN=""
+TTY_OUT="/dev/stderr"
 if [ -t 0 ]; then
   TTY_IN=/dev/stdin
-elif [ -e /dev/tty ]; then
+  TTY_OUT=/dev/stderr
+elif (echo "" > /dev/tty && read -t 0 unused < /dev/tty) 2>/dev/null; then
   TTY_IN=/dev/tty
-else
-  TTY_IN=""
+  TTY_OUT=/dev/tty
 fi
 
 prompt_input() {
   local var="$1" prompt="$2" default="$3"
   if [ -n "$TTY_IN" ]; then
-    printf "%b" "$prompt" > /dev/tty
+    printf "%b" "$prompt" > "$TTY_OUT"
     read -r "$var" < "$TTY_IN"
   fi
   eval ": \"\${$var:=$default}\""

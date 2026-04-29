@@ -1,0 +1,4 @@
+interface:
+  display_name: "Vue Admin Pro"
+  short_description: "Vue admin architecture guidance"
+  default_prompt: "Use $vue-admin-pro to design or review a Vue admin dashboard architecture."
