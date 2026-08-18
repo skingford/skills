@@ -1,6 +1,6 @@
 ---
 name: private-claude-code-state-reset
-description: Safely reset Claude Code local state on macOS or Windows and migrate it to a fresh user identity. Full backup first (timestamped to the second), then auto-migrate everything (projects memory, sessions, history, skills, agents, plugins, rules, hooks) into the new identity, excluding only old-identity state (credentials, device/telemetry IDs, account fields). Also resets the Claude Desktop app's separate login state (claude.ai session stores, macOS Keychain "Claude Safe Storage") while keeping claude_desktop_config.json MCP config. Old data is kept as backup until the user confirms, then deleted manually. Use when the user asks to delete/recreate ~/.claude or %USERPROFILE%\.claude, regenerate Claude Code machine code/device identity, switch to a new account while keeping all data, log out/reset the Claude Desktop app identity, decide which .claude files are identity vs migratable content, debug why the old account still shows after deleting ~/.claude (Keychain), or clear the remaining login layers (MCP OAuth, browser claude.ai session). Always runs the full reset-and-migrate workflow (Level B); a plain re-login without reset is out of scope.
+description: Safely reset Claude Code local state on macOS or Windows and migrate it to a fresh user identity. Full backup first (timestamped to the second), then auto-migrate everything (projects memory, sessions, history, skills, agents, plugins, rules, hooks) into the new identity, excluding only old-identity state (credentials, device/telemetry IDs, account fields). Also resets the Claude Desktop app's separate login state (claude.ai session stores, macOS Keychain "Claude Safe Storage") while keeping claude_desktop_config.json MCP config. Old data is kept as backup until the user confirms, then deleted manually. Use when the user asks to delete/recreate ~/.claude or %USERPROFILE%\.claude, regenerate Claude Code machine code/device identity, switch to a new account while keeping all data, log out/reset the Claude Desktop app identity, decide which .claude files are identity vs migratable content, debug why the old account still shows after deleting ~/.claude (Keychain), or clear the remaining login layers (MCP OAuth, browser claude.ai session). Always runs the full reset-and-migrate workflow; a plain re-login without reset is out of scope.
 ---
 
 # Private Claude Code State Reset
@@ -21,28 +21,17 @@ Reset Claude Code's local identity without losing anything else. The model is:
 Treat this as a high-risk filesystem workflow: inspect first, back up first,
 never delete before the user confirms.
 
-## Level: this skill always runs the full reset (Level B)
+## Login State Is Layered
 
 Claude login state is layered — Claude Code (CLI), the Claude Desktop app,
 the browser's claude.ai session, and per-MCP-server OAuth are separate
 stores that do not share credentials. Deleting `~/.claude` clears only the
 first, and on macOS not even that (Keychain items survive file deletion).
 
-This skill's job is **Level B — full identity reset with content
-migration**: new account AND fresh device/telemetry identity, keeping all
-content. When this skill is invoked, run Level B (steps 0–9 plus the Claude
-Desktop section) directly — do not ask the user to pick a level.
-
-For background only, **Level A — a login-only account switch** exists
-outside this skill: `/logout` inside Claude Code, then log in again (some
-builds also expose `claude auth logout` / `claude auth status` — verify
-with `claude --help`); Claude Desktop Settings → Account → Log Out, Cmd+Q
-(fully quit, not just close the window), relaunch, new login; browser: log
-out of claude.ai or clear its site data (claude.ai Settings can also log
-out ALL active sessions remotely). Level A keeps config, history, AND the
-old device identity — it is not a reset. Mention it only if the user
-explicitly says they just want to re-login without resetting anything, and
-never delete `~/.claude` for that case.
+This skill always runs the full reset-and-migrate workflow — new account
+AND fresh device/telemetry identity, keeping all content (steps 0–9 plus
+the Claude Desktop section). Run it directly when invoked; a plain
+re-login without a reset is out of scope.
 
 If after any logout/reset Claude Code still recognizes the old account, the
 leftover is almost always a macOS Keychain item — see "Troubleshooting: old
