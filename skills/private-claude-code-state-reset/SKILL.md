@@ -1,6 +1,6 @@
 ---
 name: private-claude-code-state-reset
-description: Safely reset Claude Code local state on macOS or Windows and migrate it to a fresh user identity. Full backup first (timestamped to the second), then auto-migrate everything (projects memory, sessions, history, skills, agents, plugins, rules, hooks) into the new identity, excluding only old-identity state (credentials, device/telemetry IDs, account fields). Also resets the Claude Desktop app's separate login state (claude.ai session stores, macOS Keychain "Claude Safe Storage") while keeping claude_desktop_config.json MCP config. Old data is kept as backup until the user confirms, then deleted manually. Use when the user asks to delete/recreate ~/.claude or %USERPROFILE%\.claude, regenerate Claude Code machine code/device identity, switch to a new account while keeping all data, log out/reset the Claude Desktop app identity, or decide which .claude files are identity vs migratable content.
+description: Safely reset Claude Code local state on macOS or Windows and migrate it to a fresh user identity. Full backup first (timestamped to the second), then auto-migrate everything (projects memory, sessions, history, skills, agents, plugins, rules, hooks) into the new identity, excluding only old-identity state (credentials, device/telemetry IDs, account fields). Also resets the Claude Desktop app's separate login state (claude.ai session stores, macOS Keychain "Claude Safe Storage") while keeping claude_desktop_config.json MCP config. Old data is kept as backup until the user confirms, then deleted manually. Use when the user asks to delete/recreate ~/.claude or %USERPROFILE%\.claude, regenerate Claude Code machine code/device identity, switch to a new account while keeping all data, log out/reset the Claude Desktop app identity, decide which .claude files are identity vs migratable content, debug why the old account still shows after deleting ~/.claude (Keychain), or clear the remaining login layers (MCP OAuth, browser claude.ai session). Always runs the full reset-and-migrate workflow (Level B); a plain re-login without reset is out of scope.
 ---
 
 # Private Claude Code State Reset
@@ -20,6 +20,33 @@ Reset Claude Code's local identity without losing anything else. The model is:
 
 Treat this as a high-risk filesystem workflow: inspect first, back up first,
 never delete before the user confirms.
+
+## Level: this skill always runs the full reset (Level B)
+
+Claude login state is layered — Claude Code (CLI), the Claude Desktop app,
+the browser's claude.ai session, and per-MCP-server OAuth are separate
+stores that do not share credentials. Deleting `~/.claude` clears only the
+first, and on macOS not even that (Keychain items survive file deletion).
+
+This skill's job is **Level B — full identity reset with content
+migration**: new account AND fresh device/telemetry identity, keeping all
+content. When this skill is invoked, run Level B (steps 0–9 plus the Claude
+Desktop section) directly — do not ask the user to pick a level.
+
+For background only, **Level A — a login-only account switch** exists
+outside this skill: `/logout` inside Claude Code, then log in again (some
+builds also expose `claude auth logout` / `claude auth status` — verify
+with `claude --help`); Claude Desktop Settings → Account → Log Out, Cmd+Q
+(fully quit, not just close the window), relaunch, new login; browser: log
+out of claude.ai or clear its site data (claude.ai Settings can also log
+out ALL active sessions remotely). Level A keeps config, history, AND the
+old device identity — it is not a reset. Mention it only if the user
+explicitly says they just want to re-login without resetting anything, and
+never delete `~/.claude` for that case.
+
+If after any logout/reset Claude Code still recognizes the old account, the
+leftover is almost always a macOS Keychain item — see "Troubleshooting: old
+account survives a reset" below.
 
 ## Platform Detection
 
@@ -43,6 +70,11 @@ Path map (same roles on both platforms):
 | Top-level account config (identity-bearing) | `~/.claude.json` | `%USERPROFILE%\.claude.json`     |
 | Local rollback copy     | `~/.claude.old` (+ `~/.claude.json.old`) | `%USERPROFILE%\.claude.old` (+ `.claude.json.old`) |
 | Timestamped backups     | `~/claude-backups/.claude-backup-*` | `%USERPROFILE%\claude-backups\.claude-backup-*` |
+
+Linux uses the macOS layout and commands, with two simplifications: there is
+no Keychain, so credentials always live in `~/.claude/.credentials.json`
+(the file path the exclusion list already covers), and the Claude Desktop
+section normally does not apply.
 
 Backup folder names embed a timestamp precise to the second:
 `%Y%m%d-%H%M%S` (macOS) / `yyyyMMdd-HHmmss` (Windows), e.g.
@@ -112,8 +144,19 @@ exclusion list above. This automatically covers `projects`, `file-history`,
 
 `settings.json` is content, not identity, but the fresh install writes its
 own: keep the newly generated file as base and deliberately merge old
-permissions/hooks/plugin config into it (never blind-overwrite). Before
-merging, check the old file for tokens/keys (`apiKeyHelper`, `env` secrets).
+permissions/hooks/plugin config into it (never blind-overwrite). Step 6b
+performs this merge. Before merging, check the old file for tokens/keys
+(`apiKeyHelper`, `env` secrets).
+
+**MCP OAuth credentials** (third-party services the user authorized MCP
+servers against — GitHub, Google, …) are deliberately NOT on the exclusion
+list: they belong to those services, not to the Claude account, so they
+migrate along with the MCP config and keep working after the account
+switch. `claude auth logout` / `/logout` does not touch them. Only when the
+goal is a full scrub rather than a migration, offer to clear them too:
+list servers with `claude mcp list`, use a per-server logout if the
+installed version has one (verify with `claude mcp --help`), and on macOS
+check for MCP-related Keychain items alongside the Claude Code ones.
 
 Known tradeoff of the blacklist approach: an identity-bearing file introduced
 by a future Claude Code version would migrate by default. The step-7
@@ -143,7 +186,7 @@ du -sh "$HOME/.claude"; df -h "$HOME"
 Windows:
 
 ```powershell
-"{0:N1} MB" -f ((Get-ChildItem (Join-Path $env:USERPROFILE ".claude") -Recurse -Force |
+"{0:N1} MB" -f ((Get-ChildItem (Join-Path $env:USERPROFILE ".claude") -Recurse -Force -File |
   Measure-Object Length -Sum).Sum / 1MB)
 "{0:N1} GB free" -f ((Get-PSDrive $env:USERPROFILE[0]).Free / 1GB)
 ```
@@ -213,16 +256,28 @@ this machine never had); (b) total item counts match (backup has exactly one
 extra file: `.claude.json.top-level`). A count mismatch usually means a
 Claude Code session was still writing — close it and re-run the backup.
 
-macOS:
+The verification block is deliberately self-contained: it re-derives the
+paths and picks the newest backup by name, because shell state (variables
+like `$src`/`$dest`) does not persist between separate tool invocations.
+Never rely on variables from the previous block here — with them unset the
+per-item check would vacuously pass against `/`.
+
+macOS (uses `find` for top-level enumeration — immune to bash/zsh glob
+differences and to a dotfile-less `.claude`):
 
 ```bash
-for f in "$src"/* "$src"/.*; do
+src="$HOME/.claude"
+dest=$(ls -d "$HOME/claude-backups"/.claude-backup-* 2>/dev/null | sort | tail -1)
+[ -n "$dest" ] && [ -d "$dest" ] \
+  || { echo "No backup dir found under ~/claude-backups"; exit 1; }
+echo "Verifying against: $dest"
+missing=0
+while IFS= read -r f; do
   base=$(basename "$f")
-  { [ "$base" = "." ] || [ "$base" = ".." ]; } && continue
-  { [ -e "$f" ] || [ -L "$f" ]; } || continue   # skip unmatched glob literal
   { [ -e "$dest/$base" ] || [ -L "$dest/$base" ]; } \
-    || { echo "Backup missing: $base"; exit 1; }
-done
+    || { echo "Backup missing: $base"; missing=1; }
+done < <(find "$src" -mindepth 1 -maxdepth 1)
+[ "$missing" -eq 0 ] || exit 1
 src_count=$(find "$src" | wc -l)
 dest_count=$(find "$dest" | wc -l)
 echo "source=$src_count backup=$dest_count (expect backup = source + 1)"
@@ -231,6 +286,13 @@ echo "source=$src_count backup=$dest_count (expect backup = source + 1)"
 Windows:
 
 ```powershell
+# Self-contained: re-derive paths, pick the newest backup by name
+$src = Join-Path $env:USERPROFILE ".claude"
+$dest = Get-ChildItem -LiteralPath (Join-Path $env:USERPROFILE "claude-backups") `
+  -Directory -Force -Filter ".claude-backup-*" |
+  Sort-Object Name | Select-Object -Last 1 -ExpandProperty FullName
+if (-not $dest) { throw "No backup dir found under claude-backups" }
+"Verifying against: $dest"
 Get-ChildItem -LiteralPath $src -Force | ForEach-Object {
   if (-not (Test-Path -LiteralPath (Join-Path $dest $_.Name))) {
     throw "Backup missing: $($_.Name)"
@@ -260,8 +322,14 @@ macOS:
 [ -e "$HOME/.claude.json.old" ] && { echo ".claude.json.old already exists — resolve first"; exit 1; }
 mv "$HOME/.claude" "$HOME/.claude.old" || { echo "Rename failed — nothing changed"; exit 1; }
 if ! mv "$HOME/.claude.json" "$HOME/.claude.json.old"; then
-  mv "$HOME/.claude.old" "$HOME/.claude"   # restore the consistent pre-step state
-  echo "Second rename failed — rolled back .claude.old to .claude"
+  # Restore the consistent pre-step state; report honestly if that also fails
+  if mv "$HOME/.claude.old" "$HOME/.claude"; then
+    echo "Second rename failed — rolled back .claude.old to .claude"
+  else
+    echo "Second rename failed AND rollback failed — current state:"
+    echo "  ~/.claude.old exists, ~/.claude missing, ~/.claude.json untouched."
+    echo "Restore manually: mv ~/.claude.old ~/.claude"
+  fi
   exit 1
 fi
 ```
@@ -284,8 +352,14 @@ Rename-Item -LiteralPath (Join-Path $env:USERPROFILE ".claude") -NewName ".claud
 try {
   Rename-Item -LiteralPath (Join-Path $env:USERPROFILE ".claude.json") -NewName ".claude.json.old" -ErrorAction Stop
 } catch {
-  # Restore the consistent pre-step state before failing
-  Rename-Item -LiteralPath (Join-Path $env:USERPROFILE ".claude.old") -NewName ".claude" -ErrorAction Stop
+  # Restore the consistent pre-step state; report honestly if that also fails
+  try {
+    Rename-Item -LiteralPath (Join-Path $env:USERPROFILE ".claude.old") -NewName ".claude" -ErrorAction Stop
+  } catch {
+    throw ("Second rename failed AND rollback failed - current state: " +
+      ".claude.old exists, .claude missing, .claude.json untouched. " +
+      "Restore manually: Rename-Item .claude.old .claude")
+  }
   throw "Second rename failed - rolled back .claude.old to .claude"
 }
 ```
@@ -359,8 +433,7 @@ if ($LASTEXITCODE -gt 7) { throw "Migration failed: $LASTEXITCODE" }
 Note: neither command deletes anything in the destination (`rsync` without
 `--delete`, `robocopy` without `/MIR`), so fresh identity files are safe.
 Excluding top-level `settings.json` protects the newly generated settings
-from being overwritten (merge it deliberately per the Classification
-section).
+from being overwritten (step 6b merges it deliberately).
 
 ### 6. Merge migratable parts of `.claude.json`
 
@@ -420,7 +493,7 @@ foreach ($prop in $oldJson.PSObject.Properties) {
   if ($identity -contains $prop.Name -or $prop.Name -eq "projects") { continue }
   $newJson | Add-Member -Force -NotePropertyName $prop.Name -NotePropertyValue $prop.Value
 }
-if ($oldJson.PSObject.Properties["projects"]) {
+if ($oldJson.PSObject.Properties["projects"] -and $null -ne $oldJson.projects) {
   if (-not $newJson.PSObject.Properties["projects"]) {
     $newJson | Add-Member -NotePropertyName projects -NotePropertyValue ([pscustomobject]@{})
   }
@@ -429,6 +502,153 @@ if ($oldJson.PSObject.Properties["projects"]) {
   }
 }
 # Identity blacklist (never copied): oauthAccount, userID, firstStartTime
+$newJson | ConvertTo-Json -Depth 100 | Set-Content -LiteralPath $tmpPath -Encoding utf8
+Move-Item -LiteralPath $tmpPath -Destination $newPath -Force
+```
+
+### 6b. Merge old `settings.json` (deliberate, not blind)
+
+Step 5 excluded top-level `settings.json` so the fresh install's file stays
+the base. Now merge the old configuration into it: old top-level keys win,
+except `permissions`, `env`, and `hooks`, which are merged object-key by
+object-key (old entries win on conflict) — and `permissions.allow` /
+`permissions.deny`, which become the union of both lists. The write is
+atomic (tmp file + rename), same as step 6.
+
+**Before merging, inspect the old file for secrets.** `apiKeyHelper` and
+`env` may hold tokens or keys bound to the old account — anything
+account-specific must NOT be carried over. Show any hits to the user and
+strip them (from a working copy of the old file) before running the merge:
+
+macOS:
+
+```bash
+grep -nE '"apiKeyHelper"|"env"' "$HOME/.claude.old/settings.json" \
+  || echo "no apiKeyHelper/env keys in old settings"
+```
+
+Windows:
+
+```powershell
+Select-String -LiteralPath (Join-Path $env:USERPROFILE ".claude.old\settings.json") `
+  -SimpleMatch -Pattern '"apiKeyHelper"', '"env"'
+```
+
+macOS, with `jq`:
+
+```bash
+old_s="$HOME/.claude.old/settings.json"
+new_s="$HOME/.claude/settings.json"
+[ -f "$old_s" ] || { echo "No old settings.json — skip"; exit 0; }
+[ -f "$new_s" ] || echo '{}' > "$new_s"
+jq -s '
+  def uniq(a; b): ((a // []) + (b // [])) | unique;
+  .[0] as $old | .[1] as $new |
+  ($new + $old)
+  + (if ($old.permissions or $new.permissions) then
+       {permissions: ((($new.permissions // {}) + ($old.permissions // {}))
+         + (if ($old.permissions.allow or $new.permissions.allow) then
+              {allow: uniq($new.permissions.allow; $old.permissions.allow)}
+            else {} end)
+         + (if ($old.permissions.deny or $new.permissions.deny) then
+              {deny: uniq($new.permissions.deny; $old.permissions.deny)}
+            else {} end))}
+     else {} end)
+  + (if ($old.env or $new.env) then
+       {env: (($new.env // {}) + ($old.env // {}))} else {} end)
+  + (if ($old.hooks or $new.hooks) then
+       {hooks: (($new.hooks // {}) + ($old.hooks // {}))} else {} end)
+' "$old_s" "$new_s" > "$new_s.tmp" && mv "$new_s.tmp" "$new_s"
+```
+
+macOS fallback if `jq` is absent:
+
+```bash
+node -e '
+const fs = require("fs");
+const [oldP, newP] = process.argv.slice(1);
+if (!fs.existsSync(oldP)) { console.log("No old settings.json - skip"); process.exit(0); }
+const oldJ = JSON.parse(fs.readFileSync(oldP, "utf8"));
+const newJ = fs.existsSync(newP) ? JSON.parse(fs.readFileSync(newP, "utf8")) : {};
+const DEEP = ["permissions", "env", "hooks"];
+const merged = { ...newJ };
+for (const [k, v] of Object.entries(oldJ)) {
+  if (DEEP.includes(k)) continue;
+  merged[k] = v;
+}
+for (const k of DEEP) {
+  if (oldJ[k] == null && newJ[k] == null) continue;
+  merged[k] = { ...(newJ[k] || {}), ...(oldJ[k] || {}) };
+}
+if (merged.permissions) {
+  for (const list of ["allow", "deny"]) {
+    const union = [...new Set([
+      ...(newJ.permissions?.[list] || []),
+      ...(oldJ.permissions?.[list] || []),
+    ])];
+    if (union.length) merged.permissions[list] = union;
+  }
+}
+fs.writeFileSync(newP + ".tmp", JSON.stringify(merged, null, 2));
+fs.renameSync(newP + ".tmp", newP);
+' "$HOME/.claude.old/settings.json" "$HOME/.claude/settings.json"
+```
+
+Windows:
+
+```powershell
+# Requires PowerShell 7+ (see Platform Detection)
+$oldPath = Join-Path $env:USERPROFILE ".claude.old\settings.json"
+$newPath = Join-Path $env:USERPROFILE ".claude\settings.json"
+$tmpPath = "$newPath.tmp"
+if (-not (Test-Path -LiteralPath $oldPath)) { "No old settings.json - skip"; return }
+$oldJson = Get-Content -LiteralPath $oldPath -Raw | ConvertFrom-Json
+$newJson = if (Test-Path -LiteralPath $newPath) {
+  Get-Content -LiteralPath $newPath -Raw | ConvertFrom-Json
+} else { [pscustomobject]@{} }
+
+# Capture allow/deny from BOTH originals before any overwrite
+function Get-PermList($json, $name) {
+  $perm = $json.PSObject.Properties["permissions"]
+  if ($perm -and $perm.Value -and $perm.Value.PSObject.Properties[$name]) {
+    @($perm.Value.$name)
+  } else { @() }
+}
+$allow = @(((Get-PermList $newJson "allow") + (Get-PermList $oldJson "allow")) |
+  Select-Object -Unique)
+$deny = @(((Get-PermList $newJson "deny") + (Get-PermList $oldJson "deny")) |
+  Select-Object -Unique)
+
+$deepKeys = @("permissions", "env", "hooks")
+foreach ($prop in $oldJson.PSObject.Properties) {
+  if ($deepKeys -contains $prop.Name) { continue }
+  $newJson | Add-Member -Force -NotePropertyName $prop.Name -NotePropertyValue $prop.Value
+}
+foreach ($k in $deepKeys) {
+  $oProp = $oldJson.PSObject.Properties[$k]
+  if (-not $oProp -or $null -eq $oProp.Value) { continue }
+  $nProp = $newJson.PSObject.Properties[$k]
+  if (-not $nProp -or $null -eq $nProp.Value) {
+    $newJson | Add-Member -Force -NotePropertyName $k -NotePropertyValue $oProp.Value
+    continue
+  }
+  $merged = [pscustomobject]@{}
+  foreach ($p in $nProp.Value.PSObject.Properties) {
+    $merged | Add-Member -NotePropertyName $p.Name -NotePropertyValue $p.Value
+  }
+  foreach ($p in $oProp.Value.PSObject.Properties) {
+    $merged | Add-Member -Force -NotePropertyName $p.Name -NotePropertyValue $p.Value
+  }
+  $newJson | Add-Member -Force -NotePropertyName $k -NotePropertyValue $merged
+}
+if ($newJson.PSObject.Properties["permissions"] -and $newJson.permissions) {
+  if ($allow.Count) {
+    $newJson.permissions | Add-Member -Force -NotePropertyName allow -NotePropertyValue $allow
+  }
+  if ($deny.Count) {
+    $newJson.permissions | Add-Member -Force -NotePropertyName deny -NotePropertyValue $deny
+  }
+}
 $newJson | ConvertTo-Json -Depth 100 | Set-Content -LiteralPath $tmpPath -Encoding utf8
 Move-Item -LiteralPath $tmpPath -Destination $newPath -Force
 ```
@@ -485,7 +705,9 @@ state this limitation in the final report.
   exclusion list (compare directory listings, not a fixed name list).
 - New identity is the fresh one: credentials (file mtime after the new login,
   or macOS Keychain item for the new account); `settings.json` was not
-  overwritten; `.claude.json` has the NEW `oauthAccount`/`userID`.
+  overwritten AND the step-6b merge was applied (old permissions/hooks
+  present, no old-account secrets carried over) — or the user explicitly
+  skipped the merge; `.claude.json` has the NEW `oauthAccount`/`userID`.
 - Excluded state is absent or fresh: `telemetry`, `statsig`, `session-env`,
   `shell-snapshots`, `ide`, `config.json`, `mcp-health-cache.json`,
   `mcp-needs-auth-cache.json`.
@@ -502,9 +724,12 @@ Do NOT delete anything in the same session as the migration. Tell the user:
   reset was also performed.
 - They should use the new setup for a while and confirm nothing is missing.
 
-Only when the user explicitly confirms and asks for removal, delete all three
-— this is the step that fully removes the old user identity. On macOS also
-delete the old account's Keychain item if one remains.
+Only when the user explicitly confirms and asks for removal, delete every
+remaining item (up to five when the desktop reset was also performed) — this
+is the step that fully removes the old user identity. On macOS also delete
+any old-account Keychain items that remain: "Claude Code-credentials"
+(Claude Code) — "Claude Safe Storage" was already replaced during the desktop
+reset if that path was taken.
 
 macOS:
 
@@ -514,6 +739,9 @@ for t in "$HOME/.claude.old" "$HOME/.claude.json.old" \
          "$HOME/claude-backups/.claude-backup-YYYYMMDD-HHMMSS" \
          "$HOME/claude-backups/claude-desktop-backup-YYYYMMDD-HHMMSS"; do
   case "$t" in
+    *..*) echo "Refusing path containing ..: $t"; exit 1 ;;   # blocks traversal past the guard
+  esac
+  case "$t" in
     "$HOME"/.claude.old|"$HOME"/.claude.json.old) ;;
     "$HOME/Library/Application Support/Claude.old") ;;
     "$HOME"/claude-backups/.claude-backup-*) ;;
@@ -522,6 +750,8 @@ for t in "$HOME/.claude.old" "$HOME/.claude.json.old" \
   esac
   if [ -e "$t" ]; then rm -rf "$t"; fi
 done
+# Old-account Claude Code Keychain item (loop: delete every matching copy)
+while security delete-generic-password -s "Claude Code-credentials" >/dev/null 2>&1; do :; done
 ```
 
 Windows:
@@ -544,6 +774,7 @@ $allowed = @(
   (Join-Path $env:APPDATA "Claude.old")
 )
 foreach ($t in $targets) {
+  if ($t -like "*..*") { throw "Refusing path containing ..: $t" }  # blocks traversal past the guard
   $isBackup = @($backupPrefixes | Where-Object { $t.StartsWith($_) }).Count -gt 0
   if (-not (($allowed -contains $t) -or $isBackup)) {
     throw "Refusing unexpected path: $t"
@@ -561,6 +792,28 @@ legacy `Desktop\claude-backups` still exists at this point, relocate it per
 "Legacy Desktop backups" first — never delete backups in place on Desktop,
 since OneDrive may have a cloud copy that would silently outlive the local
 deletion.
+
+## Troubleshooting: old account survives a reset
+
+Symptom: `~/.claude` was deleted or renamed (or `/logout` was run), Claude
+Code restarts — and still shows the OLD account. On macOS this is expected
+whenever the old login used the Keychain: `~/.claude` and the Keychain are
+two independent stores, and file deletion never touches the latter. Check
+in this order:
+
+1. macOS Keychain: open Keychain Access and search for `Claude`,
+   `Anthropic`, and `Claude Code`. Confirm an item actually belongs to
+   Claude / Anthropic before deleting it (other tools may have
+   similar-sounding entries). The Claude Code item is
+   "Claude Code-credentials"; the Desktop app's key is
+   "Claude Safe Storage".
+2. A stale `~/.claude/.credentials.json` (or
+   `%USERPROFILE%\.claude\.credentials.json` on Windows) left behind by a
+   partial cleanup.
+3. A still-running Claude Code / Claude Desktop process holding the old
+   session in memory — quit it fully (Cmd+Q, not window close) and retry.
+4. The browser's claude.ai login — separate from both apps; log out there
+   if the goal is a complete switch.
 
 ## Claude Desktop (desktop app) login state
 
@@ -603,16 +856,19 @@ macOS:
 ```bash
 appdata="$HOME/Library/Application Support/Claude"
 [ -d "$appdata" ] || { echo "Claude Desktop not installed — skip"; exit 0; }
-pgrep -x "Claude" >/dev/null && { echo "Claude Desktop is running — quit it first"; exit 1; }
+# -f matches helper processes too ("Claude Helper (Renderer)" etc. live under Claude.app)
+pgrep -f "Claude.app" >/dev/null && { echo "Claude Desktop is running — quit it first"; exit 1; }
 stamp=$(date +%Y%m%d-%H%M%S)
 dest="$HOME/claude-backups/claude-desktop-backup-$stamp"
 [ -e "$dest" ] && { echo "Backup dir already exists: $dest"; exit 1; }
 mkdir -p "$dest"; chmod 700 "$HOME/claude-backups" "$dest"
 rsync -a "$appdata/" "$dest/" || { echo "Backup failed"; exit 1; }
 [ -e "$appdata.old" ] && { echo "Claude.old already exists — resolve first"; exit 1; }
-mv "$appdata" "$appdata.old"
+# If the rename fails, the profile is still live — do NOT touch its Keychain key
+mv "$appdata" "$appdata.old" || { echo "Rename failed — Keychain left untouched"; exit 1; }
 # Old Electron encryption key — recreated on next launch for the new login
-security delete-generic-password -s "Claude Safe Storage" >/dev/null 2>&1 || true
+# (loop: multiple past logins can leave multiple items; delete every copy)
+while security delete-generic-password -s "Claude Safe Storage" >/dev/null 2>&1; do :; done
 ```
 
 Windows (DPAPI keys are per-Windows-user; renaming the profile suffices):
@@ -642,7 +898,9 @@ macOS:
 ```bash
 old_cfg="$HOME/Library/Application Support/Claude.old/claude_desktop_config.json"
 new_cfg="$HOME/Library/Application Support/Claude/claude_desktop_config.json"
-[ -f "$old_cfg" ] && cp -p "$old_cfg" "$new_cfg"
+if [ -f "$old_cfg" ]; then
+  cp -p "$old_cfg" "$new_cfg" || { echo "MCP config restore failed"; exit 1; }
+fi
 ```
 
 Windows:
@@ -651,7 +909,7 @@ Windows:
 $oldCfg = Join-Path $env:APPDATA "Claude.old\claude_desktop_config.json"
 $newCfg = Join-Path $env:APPDATA "Claude\claude_desktop_config.json"
 if (Test-Path -LiteralPath $oldCfg) {
-  Copy-Item -LiteralPath $oldCfg -Destination $newCfg -Force
+  Copy-Item -LiteralPath $oldCfg -Destination $newCfg -Force -ErrorAction Stop
 }
 ```
 
@@ -664,14 +922,32 @@ scanning.
 
 ## Other machine state (optional, mention to the user)
 
-Outside `.claude`, Claude Code may keep caches/logs that can reference the
-old install but carry no account identity. Not part of the default workflow;
-offer them as optional cleanup only if present:
+Outside `.claude`, Claude Code and Claude Desktop may keep further traces.
+Not part of the default workflow; offer them as optional cleanup only if
+present (relevant mainly for a "restore to never-installed" goal):
 
 - macOS: `~/Library/Caches/claude-cli-nodejs` (MCP/tool logs, caches)
 - Windows: `%LOCALAPPDATA%\claude-cli-nodejs` (if present)
 - Native-install binaries/versions (e.g. `~/.local/share/claude`,
   `~/.local/bin/claude`) — reinstall artifacts, safe to keep.
+- macOS, Claude Desktop residue beyond `Application Support/Claude`: the
+  app's bundle id can leave entries under `~/Library/Caches`,
+  `~/Library/Preferences`, `~/Library/WebKit`, `~/Library/HTTPStorages`,
+  and `~/Library/Saved Application State`. Bundle ids and directory names
+  change between app versions, so the flow is always search → confirm the
+  entry belongs to Claude / Anthropic → quit Claude Desktop → delete.
+  Never batch-delete on the name match alone — other Anthropic tools,
+  development SDKs, or third-party integrations may legitimately match:
+
+  ```bash
+  find ~/Library \( -iname "*claude*" -o -iname "*anthropic*" \) 2>/dev/null
+  ```
+
+- Browser claude.ai session: logging into claude.ai in Safari/Chrome/Edge
+  is a separate login that no filesystem step here touches. For a complete
+  account switch, have the user log out of claude.ai in the browser or
+  clear the site's cookies/site data; claude.ai Settings can also log out
+  all active sessions for the account remotely.
 
 ## Reporting
 
@@ -679,11 +955,23 @@ Report the detected platform, exact paths, and pass/fail for each stage:
 preconditions (sessions closed, disk space, PowerShell 7+ on Windows, legacy
 Desktop backups found/relocated or absent), backup created (folder name with
 its to-the-second timestamp) and verified (per-item + count check), identity
-regenerated, migration exit code, `.claude.json` merge result, identity-leak
+regenerated, migration exit code, `.claude.json` merge result, `settings.json`
+merge result (step 6b, including any stripped secrets), identity-leak
 scan result, post-migration verification, and — when the desktop app is
 installed — the Claude Desktop stage (in-app switch or file-level reset,
 backup name, MCP config restored). If any step is blocked by file locks or
 access denied, stop and explain the current state instead of forcing
 deletion. Always end the migration report by listing what still holds the old
 identity (`.claude.old`, `Claude.old`, backups, old Keychain items on macOS)
-and that deletion waits for the user's explicit confirmation.
+and that deletion waits for the user's explicit confirmation. Also list the
+stores this workflow deliberately did NOT touch unless asked (browser
+claude.ai session, MCP OAuth credentials) so the user knows where a
+lingering login can come from.
+
+## References
+
+- Claude Code IAM: https://docs.anthropic.com/en/docs/claude-code/iam
+- Claude Code CLI reference: https://docs.anthropic.com/en/docs/claude-code/cli-reference
+- Claude Code MCP: https://docs.anthropic.com/en/docs/claude-code/mcp
+- Installing Claude for Desktop: https://support.anthropic.com/en/articles/10065433-installing-claude-for-desktop
+- Log out of all active sessions: https://support.anthropic.com/en/articles/10310342-how-do-i-log-out-of-all-active-sessions

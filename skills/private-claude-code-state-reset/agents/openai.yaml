@@ -1,4 +1,4 @@
 interface:
   display_name: "Private Claude Code State Reset"
   short_description: "Migrate Claude Code state to a new identity, backup-first"
-  default_prompt: "Use $private-claude-code-state-reset to back up Claude Code local state, regenerate a fresh user identity, auto-migrate all content (memory, sessions, skills, plugins) while excluding old-identity files, and keep the old data until I confirm deletion."
+  default_prompt: "Use $private-claude-code-state-reset to back up Claude Code local state, regenerate a fresh user identity, auto-migrate all content (memory, sessions, skills, plugins) while excluding old-identity files, reset the Claude Desktop app login too if installed, and keep the old data until I confirm deletion."
