@@ -669,10 +669,12 @@ Windows:
 
 ```powershell
 $patterns = @("old-email@example.com", "OLD_USER_ID", "OLD_ACCOUNT_UUID", "OLD_ORG_UUID")
+# -ErrorAction Stop everywhere: a skipped unreadable file would otherwise
+# make the scan silently incomplete - a thrown error is NOT "clean"
 $targets = @(Get-ChildItem -LiteralPath (Join-Path $env:USERPROFILE ".claude") `
-  -Recurse -File -Include *.json,*.jsonl,*.md,*.txt)
-$targets += Get-Item -LiteralPath (Join-Path $env:USERPROFILE ".claude.json")
-$hits = $targets | Select-String -SimpleMatch -Pattern $patterns -List
+  -Recurse -File -Include *.json,*.jsonl,*.md,*.txt -ErrorAction Stop)
+$targets += Get-Item -LiteralPath (Join-Path $env:USERPROFILE ".claude.json") -ErrorAction Stop
+$hits = $targets | Select-String -SimpleMatch -Pattern $patterns -List -ErrorAction Stop
 if ($hits) {
   $hits | Select-Object Path, LineNumber
   "LEAKS FOUND - review before proceeding"
@@ -715,10 +717,11 @@ Do NOT delete anything in the same session as the migration. Tell the user:
 
 Only when the user explicitly confirms and asks for removal, delete every
 remaining item (up to five when the desktop reset was also performed) — this
-is the step that fully removes the old user identity. On macOS also delete
-any old-account Keychain items that remain: "Claude Code-credentials"
-(Claude Code) — "Claude Safe Storage" was already replaced during the desktop
-reset if that path was taken.
+is the step that fully removes the old user identity. On macOS, check for
+leftover old-account Keychain items — but verify ownership before deleting:
+after the step-4 login, the "Claude Code-credentials" item normally holds the
+NEW account's live tokens and must be kept ("Claude Safe Storage" was already
+replaced during the desktop reset if that path was taken).
 
 macOS:
 
@@ -739,8 +742,15 @@ for t in "$HOME/.claude.old" "$HOME/.claude.json.old" \
   esac
   if [ -e "$t" ]; then rm -rf "$t"; fi
 done
-# Old-account Claude Code Keychain item (loop: delete every matching copy)
-while security delete-generic-password -s "Claude Code-credentials" >/dev/null 2>&1; do :; done
+# Keychain - VERIFY BEFORE DELETING. After the step-4 login the service
+# "Claude Code-credentials" normally holds the NEW account's live tokens;
+# a blanket delete-all loop here would log the new account out. Inspect
+# first, and delete only an item confirmed stale - its "acct" attribute
+# matches the old identity, or the new login stores credentials in
+# ~/.claude/.credentials.json instead of the Keychain:
+security find-generic-password -s "Claude Code-credentials"
+# stale item only, targeted by account attribute:
+# security delete-generic-password -s "Claude Code-credentials" -a "OLD_ACCT_VALUE"
 ```
 
 Windows:
@@ -908,6 +918,12 @@ confirms the new identity works. Note: the desktop session stores are binary
 (SQLite/LevelDB), so the step-7 text leak scan does not cover them — identity
 removal here is achieved by never migrating the session stores, not by
 scanning.
+
+Rollback caveat (macOS): the file-level reset deletes the "Claude Safe
+Storage" Keychain key, so the session stores inside `Claude.old` and the
+backup can no longer be decrypted. Rolling the desktop app back means
+restoring the folder and logging in with the old account again (the MCP
+config survives as-is) — it does not resurrect the old session.
 
 ## Other machine state (optional, mention to the user)
 
